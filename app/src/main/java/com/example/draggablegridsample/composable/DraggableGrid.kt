@@ -6,62 +6,45 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.toOffset
-import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.zIndex
+import com.example.draggablegridsample.state.rememberDraggableGridState
 
 @Composable
 fun DraggableGrid(
     list: List<String>,
     modifier: Modifier = Modifier,
+    onListChange: (Int, Int) -> Unit = { _, _ -> },
     itemContent: @Composable (id: String, modifier: Modifier) -> Unit,
 ) {
-    val lazyGridState = rememberLazyGridState()
+    val draggableGridState = rememberDraggableGridState(onListChange)
     val haptic = LocalHapticFeedback.current
-
     val density = LocalDensity.current
-    var draggingIndex by remember { mutableIntStateOf(0) }
-    var dragOffset by remember { mutableStateOf(Offset.Zero) }
+
     LazyVerticalGrid(
         modifier = modifier.pointerInput(Unit) {
             detectDragGesturesAfterLongPress(
                 onDragStart = { offset ->
-                    // ドラッグ開始位置のインデックスを取得
-                    draggingIndex = lazyGridState.layoutInfo.visibleItemsInfo.find { info ->
-                        val rect = Rect(info.offset.toOffset(), info.size.toSize())
-                        rect.contains(offset)
-                    }?.index ?: -1
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress) // 触覚フィードバック
+                    // 触覚フィードバック
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    draggableGridState.onDragStart(offset)
                 },
                 onDrag = { change, dragAmount ->
-                    dragOffset += dragAmount
-                    change.consume() // ドラッグイベントの消費
+                    draggableGridState.onDrag(change, dragAmount)
+                    change.consume()
                 },
-                onDragEnd = {
-                    dragOffset = Offset.Zero
-                },
-                onDragCancel = {
-                    dragOffset = Offset.Zero
-                }
+                onDragEnd = draggableGridState::onDragEnd,
+                onDragCancel = draggableGridState::onDragCancel
             )
         },
         columns = GridCells.Fixed(3),
-        state = lazyGridState,
+        state = draggableGridState.lazyGridState,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -69,12 +52,13 @@ fun DraggableGrid(
             items = list,
             key = { index, item -> item },
         ) { index: Int, item: String ->
-            val dragging = draggingIndex == index
+            val dragging = draggableGridState.draggingIndex == index
+            val offset = draggableGridState.dragOffset
             val modifier = if (dragging) {
                 Modifier
                     .offset(
-                        x = with(density) { dragOffset.x.toDp() },
-                        y = with(density) { dragOffset.y.toDp() },
+                        x = with(density) { offset.x.toDp() },
+                        y = with(density) { offset.y.toDp() },
                     )
                     .zIndex(1f) // ドラッグ中のアイテムを前面に表示
             } else {

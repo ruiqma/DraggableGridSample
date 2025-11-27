@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -32,11 +33,15 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .padding(horizontal = 8.dp)
                 ) { innerPadding ->
+                    val list = remember { List(100) { "$it" }.toMutableList() }
                     Column(
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         DraggableGrid(
                             list = List(100) { "$it" },
+                            onListChange = { from, to ->
+                                list.add(to, list.removeAt(from))
+                            },
                         ) { id: String, modifier: Modifier ->
                             ItemBox(id = id, modifier = modifier)
                         }
