@@ -1,20 +1,25 @@
 package com.example.draggablegridsample.composable
 
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.example.draggablegridsample.constants.Constants
 import com.example.draggablegridsample.state.rememberDraggableGridState
+import kotlinx.coroutines.delay
 
 @Composable
 fun DraggableGrid(
@@ -26,6 +31,19 @@ fun DraggableGrid(
     val draggableGridState = rememberDraggableGridState(onListChange)
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
+
+    // オーバースクロール処理
+    val overScrollPercent = draggableGridState.getOverScrollPercent()
+    LaunchedEffect(overScrollPercent) {
+        while (overScrollPercent != 0f) {
+            if (overScrollPercent < 0 && !draggableGridState.lazyGridState.canScrollBackward) break
+            if (0 < overScrollPercent && !draggableGridState.lazyGridState.canScrollForward) break
+            val scrollByPx = Constants.SCROLL_BY_PX_MAX * overScrollPercent
+            draggableGridState.lazyGridState.scrollBy(scrollByPx)
+            draggableGridState.onDrag(null, Offset(0f, scrollByPx))
+            delay(Constants.DELAY_INTERVAL)
+        }
+    }
 
     LazyVerticalGrid(
         modifier = modifier.pointerInput(Unit) {

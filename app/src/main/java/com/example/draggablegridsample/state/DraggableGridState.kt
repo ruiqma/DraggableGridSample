@@ -73,6 +73,35 @@ class DraggableGridState(
         onDragIndexChange(target)
     }
 
+    /**
+     * オーバースクロール割合を返す
+     * 要素の上端下端が画面の上端下端からどれだけはみ出しているかで割合を算出する
+     *
+     * @return -1 ~ 1(オーバースクロール中でない場合は0)
+     */
+    fun getOverScrollPercent(): Float {
+        val item = draggedItem ?: return 0f
+        val itemHeight = item.size.height.toFloat()
+        val itemHeightHalf = itemHeight / 2f
+
+        // 画面上端からどれだけはみ出しているか
+        val topOverScroll =
+            lazyGridState.layoutInfo.viewportStartOffset - dragPosition.y + (draggingItemOffsetY + itemHeightHalf)
+        // 画面下端からどれだけはみ出しているか
+        val bottomOverScroll =
+            dragPosition.y - (itemHeightHalf + draggingItemOffsetY) + itemHeight - lazyGridState.layoutInfo.viewportEndOffset
+
+        val overScrollPercent = if(0 < topOverScroll) {
+            -topOverScroll.coerceAtMost(itemHeight) / itemHeight
+        } else if(0 < bottomOverScroll) {
+            bottomOverScroll.coerceAtMost(itemHeight) / itemHeight
+        } else {
+            0f
+        }
+
+        return overScrollPercent
+    }
+
     private fun findItemInfo(index: Int): LazyGridItemInfo? {
         return lazyGridState.layoutInfo.visibleItemsInfo.find { info ->
             info.index == index
