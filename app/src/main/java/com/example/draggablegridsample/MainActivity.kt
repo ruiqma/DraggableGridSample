@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -33,7 +34,7 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .padding(horizontal = 8.dp)
                 ) { innerPadding ->
-                    val list = remember { List(100) { "$it" }.toMutableList() }
+                    val list = remember { List(100) { "$it" }.toMutableStateList() }
                     Column(
                         modifier = Modifier.padding(innerPadding)
                     ) {

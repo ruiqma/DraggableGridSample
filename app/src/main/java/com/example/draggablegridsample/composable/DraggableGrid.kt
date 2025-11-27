@@ -50,7 +50,7 @@ fun DraggableGrid(
     ) {
         itemsIndexed(
             items = list,
-            key = { index, item -> item },
+            key = { index, item -> item }, // Compose側でアイテムを特定するためのキー
         ) { index: Int, item: String ->
             val dragging = draggableGridState.draggingIndex == index
             val offset = draggableGridState.dragOffset
@@ -62,7 +62,7 @@ fun DraggableGrid(
                     )
                     .zIndex(1f) // ドラッグ中のアイテムを前面に表示
             } else {
-                Modifier
+                Modifier.animateItem() // 入れ替えられる側にアニメーションを設定
             }
             itemContent(item, modifier)
         }
