@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         DraggableGrid(
-                            list = List(100) { "$it" },
+                            list = list,
                             onListChange = { from, to ->
                                 list.add(to, list.removeAt(from))
                             },
